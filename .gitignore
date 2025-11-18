@@ -8,5 +8,7 @@ wheels/
 
 # Virtual environments
 .venv
+
+!cache/d37b9395c2baf168f977ce9ff9ec007d7270fc84cbf1549324bfc8dfc34333a9.html
 cache/
 .coverage
