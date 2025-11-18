@@ -33,6 +33,16 @@ button {
 	font-size: 1.5rem;
 }
 
+main {
+	min-height: 80vh;
+}
+
+footer {
+	display: flex;
+	font-size: 0.5rem;
+	justify-content: center;
+}
+
 .preview {
 	margin-top: 1rem;
 	padding: 1rem;
@@ -48,4 +58,9 @@ button {
 	border: 0.1rem solid #f5c6cb;
 	border-radius: 0.2rem;
 	margin-top: 1rem;
+}
+
+.gogogo {
+	background-color: #28a745;
+	color: white;
 }

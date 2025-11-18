@@ -71,7 +71,9 @@ async def script() -> str:
 class Responses(Enum):
     INVALID_URL = "Invalid URL, please check your input!"
     INVALID_SCHEME = "Invalid URL scheme, only http and https are supported."
-    UNSUPPORTED_URL = "The provided URL is not supported. Please provide a valid link."
+    UNSUPPORTED_URL = (
+        "The provided URL is not supported. Please provide an Apple News link."
+    )
 
 
 def check_valid_url(url: str) -> Optional[CachedResult]:
