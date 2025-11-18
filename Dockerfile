@@ -1,4 +1,4 @@
-FROM python:3.13
+FROM python:3.13 AS builder
 
 #Set the working directory
 WORKDIR /app
@@ -11,6 +11,13 @@ RUN mkdir lessnews
 COPY lessnews lessnews/
 
 RUN python -m pip install .
+
+FROM python:3.13-slim
+
+
+COPY --from=builder /usr/local/bin/lessnews /usr/local/bin/lessnews
+# COPY --from=builder /usr/local/lib/python3.13 /usr/local/lib/python3.13
+COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
 
 #Expose the required port
 EXPOSE 8001
@@ -27,3 +34,4 @@ USER lessnewsuser
 
 #Run the command
 CMD ["lessnews"]
+
