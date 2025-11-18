@@ -25,4 +25,4 @@ docker_run: docker_build
 coverage:
     uv run coverage run --source=lessnews --omit="lessnews/__main__.py" -m pytest
     uv run coveralls
-   @echo "Coverage report should be at https://coveralls.io/github/yaleman/lessnews?branch=$(git branch --show-current)"
+    @echo "Coverage report should be at https://coveralls.io/github/yaleman/lessnews?branch=$(git branch --show-current)"
