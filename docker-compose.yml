@@ -1,0 +1,12 @@
+---
+services:
+  lessnews:
+    image: ghcr.io/yaleman/lessnews:latest
+    container_name: lessnews
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8005:8001"
+    volumes:
+      - lessnews_data:/cache
+volumes:
+  lessnews_data:
