@@ -1,0 +1,51 @@
+body {
+	padding: 1rem;
+	font-size: 1.5rem;
+	font-family: sans-serif;
+	background-color: #f9f9f9;
+	color: #333333;
+}
+
+h1 {
+	color: #2c3e50;
+}
+
+input[type="text"],
+input[type="password"] {
+	padding: 0.5rem;
+	margin: 0.5rem 0;
+	border: 0.1rem solid #ccc;
+	border-radius: 0.2rem;
+	min-width: 50vw;
+	box-sizing: border-box;
+	font-size: 1.5rem;
+}
+
+button {
+	background-color: #edccf8;
+	color: black;
+	cursor: pointer;
+	margin: 0.5rem 0;
+	padding: 0.5rem;
+	border: 0.1rem solid #ccc;
+	border-radius: 0.5rem;
+	box-sizing: border-box;
+	font-size: 1.5rem;
+}
+
+.preview {
+	margin-top: 1rem;
+	padding: 1rem;
+	border: 0.1rem solid #2c3e50;
+	border-radius: 0.2rem;
+	background-color: #edccf8;
+}
+
+.error {
+	background-color: #f8d7da;
+	color: #721c24;
+	padding: 1rem;
+	border: 0.1rem solid #f5c6cb;
+	border-radius: 0.2rem;
+	margin-top: 1rem;
+}
