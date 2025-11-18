@@ -77,3 +77,12 @@ def test_valid_url() -> None:
         ),
     ]:
         assert check_valid_url(url) == expected, f"Failed for URL: '{url}'"
+
+
+def test_testlink(client: TestClient[Any]) -> None:
+    response = client.get("/fix?url=testfile", follow_redirects=False)
+    assert response.status_code == 302
+    assert "https://example.com" in response.headers.get("location", "")
+    response = client.get("/preview?url=testfile", follow_redirects=False)
+    assert response.status_code == 200
+    assert b"https://example.com" in response.content
