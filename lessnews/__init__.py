@@ -1,3 +1,4 @@
+from enum import Enum
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional
@@ -67,6 +68,12 @@ async def script() -> str:
     return load_file("script.js")
 
 
+class Responses(Enum):
+    INVALID_URL = "Invalid URL, please check your input!"
+    INVALID_SCHEME = "Invalid URL scheme, only http and https are supported."
+    UNSUPPORTED_URL = "The provided URL is not supported. Please provide a valid link."
+
+
 def check_valid_url(url: str) -> Optional[CachedResult]:
     try:
         parsed_url = urlparse(url)
@@ -74,20 +81,25 @@ def check_valid_url(url: str) -> Optional[CachedResult]:
             return CachedResult(
                 is_result=False,
                 is_error=True,
-                content="Invalid URL, please check your input!",
+                content=Responses.INVALID_URL.value,
             )
     except Exception:
         return CachedResult(
             is_result=False,
             is_error=True,
-            content="Invalid URL, please check your input!",
+            content=Responses.INVALID_URL.value,
         )
-
+    if parsed_url.scheme not in ("http", "https"):
+        return CachedResult(
+            is_result=False,
+            is_error=True,
+            content=Responses.INVALID_SCHEME.value,
+        )
     if not any(valid in parsed_url.netloc for valid in VALID_URLS_CONTAIN):
         return CachedResult(
             is_result=False,
             is_error=True,
-            content="The provided URL is not supported. Please provide a valid link.",
+            content=Responses.UNSUPPORTED_URL.value,
         )
     return None
 
