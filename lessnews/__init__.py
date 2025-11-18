@@ -227,7 +227,13 @@ async def fix(url: Optional[str] = None) -> Redirect:
         return Redirect(path="/")
     fixed_link = await fixlink(url)
     if fixed_link is None:
-        raise HTTPException(status_code=400, detail="Could not fix the link.")
+        return Redirect(
+            path="/",
+            query_params={
+                "url": url,
+                "error": "Something went wrong handling the URL.",
+            },
+        )
     if fixed_link.is_error:
         if fixed_link.redirect is not None:
             return fixed_link.redirect

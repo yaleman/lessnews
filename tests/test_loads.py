@@ -86,3 +86,15 @@ def test_testlink(client: TestClient[Any]) -> None:
     response = client.get("/preview?url=testfile", follow_redirects=False)
     assert response.status_code == 200
     assert b"https://example.com" in response.content
+
+    response = client.get("/preview?url=testfile&error=lol", follow_redirects=False)
+    assert response.status_code == 200
+    assert b"lol" in response.content
+
+    response = client.get("/preview?url=", follow_redirects=True)
+    assert response.status_code == 200
+    assert b"Invalid URL" in response.content
+
+    response = client.get("/fix?url=", follow_redirects=True)
+    assert response.status_code == 200
+    assert b"Invalid URL" in response.content
