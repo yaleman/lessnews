@@ -1,0 +1,26 @@
+[tools]
+uv = "latest"
+
+[tasks.fmt]
+run = "uv run ruff format"
+
+[tasks.type]
+depends = ["fmt"]
+run = "uv run ty check"
+
+[tasks.ruff]
+depends = ["fmt"]
+run = "uv run ruff check"
+
+[tasks.test]
+depends = ["fmt"]
+run = "uv run pytest"
+
+[tasks.start]
+run = "uv run lessnews"
+
+[tasks.check]
+depends = ["ruff", "test", "type"]
+
+[tasks.coverage]
+run = ["uv run coverage run -m pytest", "uv run coverage html"]

@@ -3,7 +3,7 @@ default:
     just --list
 
 
-check: lint test mypy
+check: lint test type
 
 lint:
     uv run ruff check lessnews tests
@@ -11,8 +11,8 @@ lint:
 test:
     uv run pytest
 
-mypy:
-    uv run mypy --strict lessnews tests
+type:
+    uv run ty check
 
 docker_build:
     docker build -t ghcr.io/yaleman/lessnews:latest .

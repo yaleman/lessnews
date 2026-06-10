@@ -1,17 +1,18 @@
+from litestar.params import QueryParameter
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Annotated
 import os.path
 from hashlib import sha256
 from urllib.parse import urlparse
-
+from importlib import metadata
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import InvalidUrlClientError
 
 from litestar import Litestar, MediaType, get, Response
 from litestar.connection import Request
-from litestar.exceptions import HTTPException, ValidationException
+from litestar.exceptions import HTTPException
 from litestar.logging import LoggingConfig
 from litestar.response import Redirect
 
@@ -22,6 +23,10 @@ SETTINGS = Settings()
 STATIC_PATH = Path(__file__).parent / "static"
 CACHE_DIR = Path(SETTINGS.cache_path)
 VALID_URLS_CONTAIN = ["apple.news"]
+URL_PATTERN = r"^http[s]*:\/\/.+"
+
+APP_VERSION = metadata.version("lessnews")
+USERAGENT = f"LessNews/{APP_VERSION}"
 
 
 @lru_cache(maxsize=32)
@@ -48,7 +53,10 @@ def inject_url(index_html: str, url: Optional[str]) -> str:
 
 
 @get("/", media_type=MediaType.HTML, cache=True)
-async def root(url: Optional[str] = None, error: Optional[str] = None) -> str:
+async def root(
+    url: Annotated[Optional[str], QueryParameter()] = None,
+    error: Annotated[Optional[str], QueryParameter(read_only=True)] = None,
+) -> str:
     index_html = load_file("index.html")
     index_html = inject_url(index_html, url)
     if error is not None:
@@ -76,21 +84,20 @@ class Responses(Enum):
     )
 
 
+BAD_URL = CachedResult(
+    is_result=False,
+    is_error=True,
+    content=Responses.INVALID_URL.value,
+)
+
+
 def check_valid_url(url: str) -> Optional[CachedResult]:
     try:
         parsed_url = urlparse(url)
         if not parsed_url.scheme or not parsed_url.netloc:
-            return CachedResult(
-                is_result=False,
-                is_error=True,
-                content=Responses.INVALID_URL.value,
-            )
+            return BAD_URL
     except Exception:
-        return CachedResult(
-            is_result=False,
-            is_error=True,
-            content=Responses.INVALID_URL.value,
-        )
+        return BAD_URL
     if parsed_url.scheme not in ("http", "https"):
         return CachedResult(
             is_result=False,
@@ -106,21 +113,34 @@ def check_valid_url(url: str) -> Optional[CachedResult]:
     return None
 
 
+def url_hash(url: str) -> str:
+    return sha256(url.encode("utf-8")).hexdigest()
+
+
+def cache_result_path(url: str) -> Path:
+    return CACHE_DIR / f"{url_hash(url)}.result"
+
+
+def cache_html_path(url: str) -> Path:
+    return CACHE_DIR / f"{url_hash(url)}.html"
+
+
 async def cache_url(url: str) -> CachedResult:
-    url_hash = sha256(url.encode("utf-8")).hexdigest()
-    cached_result = CACHE_DIR / f"{url_hash}.result"
+
+    cached_result = cache_result_path(url)
     if cached_result.exists():
         return CachedResult(
             is_result=True,
-            content=cached_result.read_text(encoding="utf-8"),
+            content="",
+            fixed_link=FixedLink.model_validate_json(
+                cached_result.read_text(encoding="utf-8")
+            ),
             is_error=False,
         )
-
-    cached_file = CACHE_DIR / f"{url_hash}.html"
-    if cached_file.exists():
+    if cache_html_path(url).exists():
         return CachedResult(
             is_result=False,
-            content=cached_file.read_text(encoding="utf-8"),
+            content=cache_html_path(url).read_text(encoding="utf-8"),
             is_error=False,
         )
 
@@ -129,13 +149,13 @@ async def cache_url(url: str) -> CachedResult:
         return valid_check
 
     async with ClientSession() as session:
-        session.headers.add("User-Agent", "LessNews/1.0")
+        session.headers.add("User-Agent", USERAGENT)
         try:
             async with session.get(url) as response:
                 if response.status == 200:
                     content = await response.text()
                     CACHE_DIR.mkdir(parents=True, exist_ok=True)
-                    cached_file.write_text(content, encoding="utf-8")
+                    cache_html_path(url).write_text(content, encoding="utf-8")
                     return CachedResult(
                         is_result=False, content=content, is_error=False
                     )
@@ -168,18 +188,21 @@ async def fixlink(url: str) -> FixedLink:
             is_error=True,
             url=None,
             redirect=Redirect(
-                path="/", query_params={"url": url, "error": cached.content}
+                path="/", query_params={"url": url, "error": str(cached.content)}
             ),
         )
-    if cached.is_result:
-        return FixedLink(url=cached.content, is_error=False, redirect=None)
+    if cached.fixed_link is not None:
+        return cached.fixed_link
     # apple news link
-    for line in cached.content.splitlines():
+    for line in str(cached.content).splitlines():
         if '<span class="click-here">Click here</span>' in line:
             start = line.find('href="') + 6
             end = line.find('"', start)
             fixed_url = line[start:end]
-            return FixedLink(url=fixed_url, is_error=False, redirect=None)
+
+            res = FixedLink(url=fixed_url, is_error=False, redirect=None)
+            cache_result_path(url).write_text(res.model_dump_json(), encoding="utf-8")
+            return res
     return FixedLink(
         url=None,
         is_error=True,
@@ -194,7 +217,13 @@ async def fixlink(url: str) -> FixedLink:
 
 
 @get("/preview", media_type=MediaType.HTML, cache=True)
-async def preview(url: str, error: Optional[str] = None) -> str | Redirect:
+async def preview(
+    url: Annotated[
+        str,
+        QueryParameter(read_only=True, description="The URL to preview"),
+    ] = "",
+    error: Annotated[Optional[str], QueryParameter()] = None,
+) -> str | Redirect:
     index_html = load_file("index.html")
     if not url.strip():
         index_html = index_html.replace(
@@ -224,18 +253,12 @@ async def preview(url: str, error: Optional[str] = None) -> str | Redirect:
 
 
 @get("/fix")
-async def fix(url: Optional[str] = None) -> Redirect:
-    if url is None:
+async def fix(url: Annotated[Optional[str], QueryParameter()] = None) -> Redirect:
+    if url is None or not url.strip():
         return Redirect(path="/")
     fixed_link = await fixlink(url)
-    if fixed_link is None:
-        return Redirect(
-            path="/",
-            query_params={
-                "url": url,
-                "error": "Something went wrong handling the URL.",
-            },
-        )
+    if fixed_link.url is None and fixed_link.redirect is not None:
+        return fixed_link.redirect
     if fixed_link.is_error:
         if fixed_link.redirect is not None:
             return fixed_link.redirect
@@ -278,15 +301,6 @@ def app_exception_handler(
     )
 
 
-def router_handler_exception_handler(
-    request: Request[Any, Any, Any], exc: ValidationException
-) -> Response[Any]:
-    return Response(
-        content={"error": "validation error", "path": request.url.path},
-        status_code=400,
-    )
-
-
 logging_config = LoggingConfig(
     root={
         "level": "DEBUG" if SETTINGS.debug else "INFO",
@@ -298,9 +312,10 @@ logging_config = LoggingConfig(
     log_exceptions="always",
 )
 
+
 app = Litestar(
     logging_config=logging_config,
-    exception_handlers={HTTPException: app_exception_handler},
+    exception_handlers={HTTPException: app_exception_handler},  # ty:ignore[invalid-argument-type]
     route_handlers=[fix, root, styles, script, preview],
 )
 __all__ = ["app"]

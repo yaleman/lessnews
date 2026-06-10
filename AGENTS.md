@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to agents when working with code in this repository.
 
 ## Project Overview
 
@@ -11,23 +11,23 @@ LessNews is a web service that fixes news article links to point to the original
 ### Running checks (lint + test + mypy)
 
 ```bash
-just check
+mise check
 ```
 
 ### Individual commands
 
 ```bash
 # Linting
-just lint
+mise ruff
 
 # Testing
-just test
+mise test
 
 # Type checking
-just mypy
+mise type
 
 # Formatting
-uv run ruff fmt lessnews tests
+mise fmt
 ```
 
 ### Running single tests
@@ -40,6 +40,12 @@ uv run pytest tests/test_loads.py::test_root
 
 ```bash
 uv run lessnews
+```
+
+or
+
+```bash
+mise start
 ```
 
 The server runs on <http://127.0.0.1:8001>

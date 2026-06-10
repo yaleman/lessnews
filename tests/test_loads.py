@@ -1,9 +1,18 @@
 from typing import Any
 
 from litestar.testing import TestClient
+import pytest
 from pytest import fixture, raises
 
-from lessnews import app, load_file, check_valid_url, Responses
+from lessnews import (
+    app,
+    load_file,
+    check_valid_url,
+    Responses,
+    cache_result_path,
+    cache_html_path,
+    cache_url,
+)
 from lessnews.models import CachedResult
 
 
@@ -83,6 +92,7 @@ def test_testlink(client: TestClient[Any]) -> None:
     response = client.get("/fix?url=testfile", follow_redirects=False)
     assert response.status_code == 302
     assert "https://example.com" in response.headers.get("location", "")
+
     response = client.get("/preview?url=testfile", follow_redirects=False)
     assert response.status_code == 200
     assert b"https://example.com" in response.content
@@ -97,4 +107,31 @@ def test_testlink(client: TestClient[Any]) -> None:
 
     response = client.get("/fix?url=", follow_redirects=True)
     assert response.status_code == 200
-    assert b"Invalid URL" in response.content
+
+
+def test_cached_result(client: TestClient[Any]) -> None:
+    url = "https://apple.news/A5vHgPPmQSvuIxPjeXLTdGQ"  # WWDC 2026, from https://developer.apple.com/documentation/applenewsformat/supportedurls
+
+    cache_result_path(url).unlink(missing_ok=True)  # Ensure cache is clear before test
+    cache_html_path(url).unlink(missing_ok=True)
+    response = client.get(f"/fix?url={url}", follow_redirects=False)
+    assert response.status_code == 302
+    assert response.headers.get("location", "") == "http://www.apple.com"
+    assert cache_result_path(url).exists()
+
+    cache_result_path(url).unlink(missing_ok=True)  # Ensure cache is clear before test
+    response = client.get(f"/fix?url={url}", follow_redirects=False)
+    assert response.status_code == 302
+    assert response.headers.get("location", "") == "http://www.apple.com"
+
+
+@pytest.mark.asyncio
+async def test_failed_result() -> None:
+    res = await cache_url(
+        "https://apple.news/thisisnotavalidurl"
+    )  # Invalid Apple News URL, should fail
+    assert res == CachedResult(
+        is_result=False,
+        is_error=True,
+        content="Failed to fetch the URL, please try again later.",
+    )
