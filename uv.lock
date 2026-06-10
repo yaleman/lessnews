@@ -529,7 +529,7 @@ dev = [
 requires-dist = [
     { name = "aiohttp", specifier = ">=3.14.0" },
     { name = "huey", specifier = ">=2.5.4" },
-    { name = "litestar", specifier = ">=2.18.0" },
+    { name = "litestar", specifier = ">=2.22.0" },
     { name = "pydantic", specifier = ">=2.12.4" },
     { name = "pydantic-settings", specifier = ">=2.12.0" },
     { name = "uvicorn", specifier = ">=0.38.0" },
@@ -547,7 +547,7 @@ dev = [
 
 [[package]]
 name = "litestar"
-version = "2.18.0"
+version = "2.22.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
@@ -561,11 +561,12 @@ dependencies = [
     { name = "pyyaml" },
     { name = "rich" },
     { name = "rich-click" },
+    { name = "sniffio" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c9/75/e0c286719860bc63459dd3364616bb436aecfbd8ab26f212a3a7957a551f/litestar-2.18.0.tar.gz", hash = "sha256:be8f91813854722b7a2f37cbb57d76977050a96b2427d3c4455d406f0f4fcd50", size = 372890, upload-time = "2025-10-05T16:24:00.094Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a1/ad/5193bb4c497d7240a83f6adc42b9e08384ef32dccc957456bb5f25d981eb/litestar-2.22.0.tar.gz", hash = "sha256:f92ec689fd25fd1bf25c8593a97830b0aa936490703d60cbace43170adcb64b0", size = 380598, upload-time = "2026-05-20T16:45:27.517Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3f/ec/76d3e07db8bac2f3248acb8879c7a8ba6b6c96e846c40d8474d1a0f79160/litestar-2.18.0-py3-none-any.whl", hash = "sha256:459ec993bafe47245c981d802a0a0c73f47c98313b3c4e47923eebe978f0e511", size = 564603, upload-time = "2025-10-05T16:23:58.439Z" },
+    { url = "https://files.pythonhosted.org/packages/e6/58/5a692eb88f964ef84a75f6006ecafa713361cdd0a28f5deb2bea4ef809d7/litestar-2.22.0-py3-none-any.whl", hash = "sha256:9d22a86fd9eae34d692d2d11320a8c2176cc3711cdb593fd7e4537098adf9137", size = 579204, upload-time = "2026-05-20T16:45:25.323Z" },
 ]
 
 [[package]]
