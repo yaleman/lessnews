@@ -8,7 +8,7 @@ LessNews is a web service that fixes news article links to point to the original
 
 ## Development Commands
 
-### Running checks (lint + test + mypy)
+### Running checks (lint + test + type checking)
 
 ```bash
 mise check
